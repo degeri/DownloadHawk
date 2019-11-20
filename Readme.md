@@ -19,18 +19,20 @@ Install firefox
 sudo apt-get install firefox
 
 ```
+Clone the git repo
 
 ```
+git clone https://github.com/degeri/DecredMon.git
 pip3 install -r requirements.txt
 ```
 
-Simply clone the git repo and run
+Edit the ini file and simply run
 
 ```
 python3 main.py
 ```
 
-Keep the program open for continuous monitoring or add it as a service. 
+For continuous monitoring keep the terminal open or add it as a service. 
 
 ## How to edit the config.ini file
 
