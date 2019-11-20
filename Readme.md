@@ -7,10 +7,17 @@ A script to monitor any changes to the bins and links on the url https://decred.
 Tested working only on Linux. 
 
 
-To support PyVirtualDisplay (Needed for a VPS without a display), you need to install xvfb
+To support PyVirtualDisplay (Needed for a VPS)
 
 ```
 sudo apt-get install xvfb
+sudo apt-get install x11-utils
+```
+
+Install firefox
+```
+sudo apt-get install firefox
+
 ```
 
 ```
