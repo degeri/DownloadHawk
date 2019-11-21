@@ -1,6 +1,6 @@
-# Decred mon
+# Download Hawk
 
-A script to monitor any changes to the bins and links on the url https://decred.org/wallets
+A script to monitor any changes to the bins and links on the url
 
 ## Installation 
 
@@ -35,6 +35,8 @@ python3 main.py
 For continuous monitoring keep the terminal open or add it as a service. 
 
 ## How to edit the config.ini file
+
+The current ini is configured for  https://decred.org/wallets 
 
 
 It is very important that this be configured correctly to avoid false positives. 
