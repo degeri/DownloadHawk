@@ -30,17 +30,20 @@ def do_checks(driver,websiteurl):
                         hash=config[check]['hash']
                         xpath=config[check]['xpath']
                         attribute=config[check]['attribute']
-                        element = driver.find_element_by_xpath(xpath)
-                        if element.is_displayed():
-                            logger.info(check + " is visible")
-                        else:
-                            error(check + "is NOT visible")
-                        htmlurl=element.get_attribute(attribute)
-                        if iniurl == htmlurl:
-                            if sha_hash_check(htmlurl,hash,check):
-                                logger.info(check+ " passed")
-                        else:
-                            error("URL not matching in the following check " + check)
+                        try:
+                            element = driver.find_element_by_xpath(xpath) 
+                            if element.is_displayed():
+                                logger.info(check + " is visible")
+                            else:
+                                error(check + "is NOT visible")
+                            htmlurl=element.get_attribute(attribute)
+                            if iniurl == htmlurl:
+                                if sha_hash_check(htmlurl,hash,check):
+                                    logger.info(check+ " passed")
+                            else:
+                                error("URL not matching in the following check " + check)
+                        except:
+                            error("Unable to find the element for " + check)
                 except Exception as e:
                     logger.exception(e)
             
@@ -52,16 +55,19 @@ def do_checks(driver,websiteurl):
                         iniurl=config[check]['url']
                         xpath=config[check]['xpath']
                         attribute=config[check]['attribute']
-                        element = driver.find_element_by_xpath(xpath)
-                        if element.is_displayed():
-                                logger.info(check + " is visible")
-                        else:
-                            error(check + "is NOT visible")
-                        htmlurl=element.get_attribute(attribute)
-                        if iniurl == htmlurl:
-                            logger.info(check+ " passed")
-                        else:
-                            error("URL not matching in the following check " + check)
+                        try:
+                            element = driver.find_element_by_xpath(xpath) 
+                            if element.is_displayed():
+                                    logger.info(check + " is visible")
+                            else:
+                                error(check + "is NOT visible")
+                            htmlurl=element.get_attribute(attribute)
+                            if iniurl == htmlurl:
+                                logger.info(check+ " passed")
+                            else:
+                                error("URL not matching in the following check " + check)
+                        except:
+                            error("Unable to find the element for " + check)
                         
 
                 except Exception as e:
