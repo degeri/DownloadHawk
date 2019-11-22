@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import os
 import shutil
 import time
+import socket
 
 def visiturl(websiteurl):
     profile = webdriver.FirefoxProfile()
@@ -18,64 +19,61 @@ def visiturl(websiteurl):
     driver.close()
 
 
+
+
 def do_checks(driver,websiteurl):
     try:
         if websiteurl == driver.current_url:
             if config['bin_list_url_sha_check'].getboolean('do_check') == True:
                 sha_check_list = config['bin_list_url_sha_check']['list'].split(",")
-                try:
-                    for check in sha_check_list:
-                        logger.info("Checking :"+ check)
-                        iniurl=config[check]['url']
-                        hash=config[check]['hash']
-                        xpath=config[check]['xpath']
-                        attribute=config[check]['attribute']
-                        try:
-                            element = driver.find_element_by_xpath(xpath) 
-                            if element.is_displayed():
-                                logger.info(check + " is visible")
-                            else:
-                                error(check + "is NOT visible")
-                            htmlurl=element.get_attribute(attribute)
-                            if iniurl == htmlurl:
-                                if sha_hash_check(htmlurl,hash,check):
-                                    logger.info(check+ " passed")
-                            else:
-                                error("URL not matching in the following check " + check)
-                        except:
-                            error("Unable to find the element for " + check)
-                except Exception as e:
-                    logger.exception(e)
+                for check in sha_check_list:
+                    try:
+                        if element_checks(driver,check,True):
+                            logger.info(check+ " passed")
+                    except Exception as e:
+                        logger.exception(e)
             
             if config['link_list_url_check'].getboolean('do_check') == True:
                 url_check_list = config['link_list_url_check']['list'].split(",")
-                try:
-                    for check in url_check_list:
-                        logger.info("Checking :"+ check)
-                        iniurl=config[check]['url']
-                        xpath=config[check]['xpath']
-                        attribute=config[check]['attribute']
-                        try:
-                            element = driver.find_element_by_xpath(xpath) 
-                            if element.is_displayed():
-                                    logger.info(check + " is visible")
-                            else:
-                                error(check + "is NOT visible")
-                            htmlurl=element.get_attribute(attribute)
-                            if iniurl == htmlurl:
-                                logger.info(check+ " passed")
-                            else:
-                                error("URL not matching in the following check " + check)
-                        except:
-                            error("Unable to find the element for " + check)
-                        
+                for check in url_check_list:
+                    try:
+                        if element_checks(driver,check,False):
+                            logger.info(check+ " passed")
+                    except Exception as e:
+                        logger.exception(e)
 
-                except Exception as e:
-                    logger.exception(e)
         else:
             error("Website did a redirect to a different url." + "Expected: "+ websiteurl + ". Got: " + driver.current_url)
     except Exception as e:
         logger.exception(e)
+
+def element_checks(driver,check,do_sha):
+    logger.info("Checking : "+ check)
+    iniurl=config[check]['url']
+    xpath=config[check]['xpath']
+    attribute=config[check]['attribute']
+    if do_sha:
+        hash=config[check]['hash']
+    try:
+        element = driver.find_element_by_xpath(xpath)
+    except Exception as e:
+        logger.exception(e)
+        error("Unable to find the element for " + check)
+        return False
+    if element.is_displayed():
+        logger.info(check + " is visible")
+    else:
+        error(check + "is NOT visible")
+    htmlurl=element.get_attribute(attribute)
+    if iniurl == htmlurl:
+        if do_sha:
+            if sha_hash_check(htmlurl,hash,check):
+                return True
+        else:
+            return True
+    else:
+        error("URL not matching in the following check " + check + ".Expected:"+iniurl+ ". Got:"+htmlurl)
+
 
 def error(msg):
     logger.error(msg)
@@ -85,22 +83,45 @@ def error(msg):
 
 def sha_hash_check(url,hash,check):
     file_name=os.path.join("downloads/"+os.path.basename(urlparse(url).path))
-    r = requests.get(url, stream=True)
-    with open(file_name, 'wb') as f:
-        for chunk in r.iter_content(32 * 1024):
-            f.write(chunk)
-    with open(file_name, 'rb') as f:
-        content = f.read()
-    sha = hashlib.sha256()
-    sha.update(content)
-    if sha.hexdigest() == hash:
-        os.remove(file_name)
-        return True
+    max_download_retry = config['programconfig']['max_download_retry']
+    for i in range(int(max_download_retry)):
+        try:
+            r = requests.get(url, stream=True, timeout=10)
+            idx = 1
+            with open(file_name, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        idx += 1
+                break
+        except requests.exceptions.ConnectionError:
+            logger.error("HTTP connection failed for "+ url)
+            time.sleep(10)
+        except socket.timeout:
+            logger.error("Socket Timeout for " + url)
+            time.sleep(10)
     else:
-        time_file = file_name+str(time.time())
-        shutil.move(file_name, time_file)
-        error("Hash did not match in the following check " + check + ". Suspected file stored at location : " + time_file)
+        logger.error("Tried " + max_download_retry + " times to download " + url + " failed")
+        if os.path.isfile(file_name):
+            try:
+                os.remove(file_name)
+            except Exception as e:
+                logger.exception(e)
         return False
+    if os.path.isfile(file_name):
+        with open(file_name, 'rb') as f:
+            content = f.read()
+        sha = hashlib.sha256()
+        sha.update(content)
+        download_hash = sha.hexdigest()
+        if download_hash == hash:
+            os.remove(file_name)
+            return True
+        else:
+            hash_file = file_name+str(download_hash)
+            shutil.move(file_name, hash_file)
+            error("Hash did not match in the following check " + check + ". Expected:"+ hash + " Got:"+ download_hash +" .Suspected file stored at location : " + hash_file)
+            return False
         
 def send_matrix_msg(msg):
     token=config['matrixconfig']['accesstoken']
