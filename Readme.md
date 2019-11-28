@@ -28,7 +28,7 @@ sudo apt-get install git
 Clone the git repo
 
 ```
-git clone https://github.com/degeri/DecredMon.git
+git clone https://github.com/degeri/DownloadHawk.git
 cd DecredMon
 pip3 install -r requirements.txt
 ```
