@@ -29,7 +29,7 @@ Clone the git repo
 
 ```
 git clone https://github.com/degeri/DownloadHawk.git
-cd DecredMon
+cd DownloadHawk
 pip3 install -r requirements.txt
 ```
 
