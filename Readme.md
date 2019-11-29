@@ -16,13 +16,20 @@ sudo apt-get install x11-utils
 
 Install firefox
 ```
-sudo apt-get install firefox
+sudo apt-get install firefox-esr
 
 ```
+Install python pip3 and git (if required)
+```
+sudo apt-get install python3-pip
+sudo apt-get install git
+```
+
 Clone the git repo
 
 ```
-git clone https://github.com/degeri/DecredMon.git
+git clone https://github.com/degeri/DownloadHawk.git
+cd DownloadHawk
 pip3 install -r requirements.txt
 ```
 
