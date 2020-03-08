@@ -87,13 +87,16 @@ def sha_hash_check(url,hash,check):
     for i in range(int(max_download_retry)):
         try:
             r = requests.get(url, stream=True, timeout=10)
-            idx = 1
-            with open(file_name, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-                        idx += 1
+            if r.status_code == 200:
+                idx = 1
+                with open(file_name, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            idx += 1
                 break
+            else:
+                time.sleep(70)
         except requests.exceptions.ConnectionError:
             logger.error("HTTP connection failed for "+ url)
             time.sleep(10)
@@ -120,7 +123,7 @@ def sha_hash_check(url,hash,check):
         else:
             hash_file = file_name+str(download_hash)
             shutil.move(file_name, hash_file)
-            error("Hash did not match in the following check " + check + ". Expected:"+ hash + " Got:"+ download_hash +" .Suspected file stored at location : " + hash_file)
+            error("Hash did not match in the following check " + check + ". Expected:"+ hash + " Got:"+ download_hash +" .Suspected file stored at location : " + hash_file+" Size :"+ str(os.path.getsize(hash_file)/1048576) + "MB")
             return False
         
 def send_matrix_msg(msg):
