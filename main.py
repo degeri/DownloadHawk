@@ -28,7 +28,7 @@ while True:
     count_time=wait_time+count_time
     if count_time > heart_time:
         logger.info("Heartbeat")
-        send_matrix_msg("Eeeeee! This is DownloadHawk. The time is " + datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+        send_matrix_msg("Eeeeee! This is DownloadHawk. The time is " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         count_time = 0
     else:
         logger.info("No Heartbeat")
